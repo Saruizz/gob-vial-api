@@ -69,7 +69,7 @@ export async function findByCiudadano(
     [ciudadanoId]
   );
 
-  const [rows] = await pool.execute<import('mysql2').RowDataPacket[]>(
+  const [rows] = await pool.query<import('mysql2').RowDataPacket[]>(
     `SELECT r.*, e.nombre AS estado_nombre, e.color_hex AS estado_color,
             c.nombre AS categoria_nombre, m.nombre AS municipio_nombre
      FROM reportes r
@@ -96,20 +96,24 @@ export async function findAll(
   const pool = getPool();
   const offset = (page - 1) * limit;
 
-  let whereClause = '';
-  const params: (number)[] = [];
+  const countParams: number[] = [];
+  const listParams: number[] = [];
 
   if (estadoId !== null) {
-    whereClause = 'WHERE r.estado_id = ?';
-    params.push(estadoId);
+    countParams.push(estadoId);
+    listParams.push(estadoId);
   }
+
+  const whereClause = estadoId !== null ? 'WHERE r.estado_id = ?' : '';
 
   const [countResult] = await pool.execute<import('mysql2').RowDataPacket[]>(
     `SELECT COUNT(*) as total FROM reportes r ${whereClause}`,
-    params
+    countParams
   );
 
-  const [rows] = await pool.execute<import('mysql2').RowDataPacket[]>(
+  listParams.push(limit, offset);
+
+  const [rows] = await pool.query<import('mysql2').RowDataPacket[]>(
     `SELECT r.*, e.nombre AS estado_nombre, e.color_hex AS estado_color,
             c.nombre AS categoria_nombre, m.nombre AS municipio_nombre,
             CONCAT(u.nombres, ' ', u.apellidos) AS ciudadano_nombre
@@ -121,7 +125,7 @@ export async function findAll(
      ${whereClause}
      ORDER BY r.fecha_creacion DESC
      LIMIT ? OFFSET ?`,
-    [...params, limit, offset]
+    listParams
   );
 
   return {
