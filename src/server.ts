@@ -20,6 +20,7 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 app.use(express.static(path.resolve(__dirname, '..', 'public')));
+app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
 
 app.use((req, _res, next) => {
   logger.debug({
