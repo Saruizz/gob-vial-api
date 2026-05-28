@@ -176,3 +176,44 @@ export async function updateEstado(
 
   await pool.execute(query, params);
 }
+
+export async function findAllPublic(): Promise<
+  {
+    id: number;
+    latitud: number;
+    longitud: number;
+    nivel_peligro: string;
+    prioridad_asignada: string | null;
+    estado_color: string;
+    estado_nombre: string;
+    categoria_nombre: string;
+    municipio_nombre: string;
+    fecha_creacion: string;
+  }[]
+> {
+  const pool = getPool();
+  const [rows] = await pool.query<import('mysql2').RowDataPacket[]>(
+    `SELECT r.id, r.latitud, r.longitud, r.nivel_peligro, r.prioridad_asignada,
+            e.color_hex AS estado_color, e.nombre AS estado_nombre,
+            c.nombre AS categoria_nombre, m.nombre AS municipio_nombre,
+            r.fecha_creacion
+     FROM reportes r
+     JOIN estados_reporte e ON r.estado_id = e.id
+     JOIN categorias_danio c ON r.categoria_id = c.id
+     JOIN municipios_magdalena m ON r.municipio_id = m.id
+     ORDER BY r.fecha_creacion DESC
+     LIMIT 1000`
+  );
+  return rows as unknown as {
+    id: number;
+    latitud: number;
+    longitud: number;
+    nivel_peligro: string;
+    prioridad_asignada: string | null;
+    estado_color: string;
+    estado_nombre: string;
+    categoria_nombre: string;
+    municipio_nombre: string;
+    fecha_creacion: string;
+  }[];
+}
