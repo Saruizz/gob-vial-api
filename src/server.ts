@@ -11,8 +11,12 @@ import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
 
+const corsOrigins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
+
 app.use(cors({
-  origin: env.CORS_ORIGIN,
+  origin: env.NODE_ENV === 'development'
+    ? true
+    : corsOrigins,
   credentials: true,
 }));
 
