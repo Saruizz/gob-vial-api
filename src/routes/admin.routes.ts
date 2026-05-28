@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { body, query } from 'express-validator';
 import * as adminController from '../controllers/admin.controller';
+import * as adminUsuariosController from '../controllers/admin-usuarios.controller';
 import { validate } from '../middlewares/validate';
 import { authenticate, authorize } from '../middlewares/auth';
 
@@ -122,6 +123,59 @@ router.post(
   triageValidation,
   validate,
   adminController.realizarTriage
+);
+
+// ============================================
+// User Management
+// ============================================
+
+router.get(
+  '/usuarios',
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 100 }),
+  validate,
+  adminUsuariosController.listarUsuarios
+);
+
+router.get('/usuarios/:id', adminUsuariosController.obtenerUsuario);
+
+const cambiarRolValidation = [
+  body('rolId')
+    .isInt({ min: 1, max: 2 })
+    .withMessage('Role must be 1 (Ciudadano) or 2 (Administrador)'),
+];
+
+router.put(
+  '/usuarios/:id/rol',
+  cambiarRolValidation,
+  validate,
+  adminUsuariosController.cambiarRol
+);
+
+const cambiarEstadoValidation = [
+  body('activo')
+    .isBoolean()
+    .withMessage('Activo must be true or false'),
+];
+
+router.put(
+  '/usuarios/:id/estado',
+  cambiarEstadoValidation,
+  validate,
+  adminUsuariosController.cambiarEstadoCuenta
+);
+
+const cambiarBiometriaValidation = [
+  body('estado')
+    .isIn(['Pendiente', 'Verificada', 'Rechazada'])
+    .withMessage('State must be Pendiente, Verificada, or Rechazada'),
+];
+
+router.put(
+  '/usuarios/:id/biometria',
+  cambiarBiometriaValidation,
+  validate,
+  adminUsuariosController.cambiarBiometria
 );
 
 export default router;

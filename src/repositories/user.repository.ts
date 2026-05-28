@@ -94,3 +94,70 @@ export async function updateEstadoCuenta(userId: number, activo: boolean): Promi
     [activo, userId]
   );
 }
+
+export async function updateRol(userId: number, rolId: number): Promise<void> {
+  const pool = getPool();
+  await pool.execute(
+    `UPDATE usuarios SET rol_id = ? WHERE id = ?`,
+    [rolId, userId]
+  );
+}
+
+export async function countAdminsActivos(): Promise<number> {
+  const pool = getPool();
+  const [rows] = await pool.execute<import('mysql2').RowDataPacket[]>(
+    `SELECT COUNT(*) as total FROM usuarios WHERE rol_id = 2 AND estado_cuenta = TRUE`
+  );
+  return rows[0].total;
+}
+
+export async function findAllAdmin(
+  rolId: number | null,
+  search: string | null,
+  page: number,
+  limit: number
+): Promise<{ rows: UserRow[]; total: number }> {
+  const pool = getPool();
+  const offset = (page - 1) * limit;
+
+  const conditions: string[] = [];
+  const params: (string | number)[] = [];
+
+  if (rolId !== null) {
+    conditions.push('u.rol_id = ?');
+    params.push(rolId);
+  }
+
+  if (search && search.trim()) {
+    conditions.push(
+      '(u.nombres LIKE ? OR u.apellidos LIKE ? OR u.email LIKE ? OR u.numero_documento LIKE ?)'
+    );
+    const term = `%${search.trim()}%`;
+    params.push(term, term, term, term);
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const [countResult] = await pool.execute<import('mysql2').RowDataPacket[]>(
+    `SELECT COUNT(*) as total FROM usuarios u ${whereClause}`,
+    params
+  );
+
+  const [rows] = await pool.query<import('mysql2').RowDataPacket[]>(
+    `SELECT u.id, u.rol_id, u.nombres, u.apellidos, u.numero_documento, u.email,
+            u.telefono, u.password_hash, u.estado_biometria, u.fecha_registro,
+            u.ultimo_login, u.estado_cuenta,
+            r.nombre AS rol_nombre
+     FROM usuarios u
+     JOIN roles r ON u.rol_id = r.id
+     ${whereClause}
+     ORDER BY u.fecha_registro DESC
+     LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+
+  return {
+    rows: rows.map((r) => r as unknown as UserRow),
+    total: countResult[0].total,
+  };
+}
