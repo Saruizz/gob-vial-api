@@ -76,6 +76,14 @@ export async function obtenerReporte(reporteId: number, ciudadanoId: number) {
   return reporte;
 }
 
+export async function obtenerReporteAdmin(reporteId: number) {
+  const reporte = await reporteRepo.getById(reporteId);
+  if (!reporte) {
+    throw new NotFoundError('Report not found');
+  }
+  return reporte;
+}
+
 export async function cambiarEstado(
   reporteId: number,
   nuevoEstadoId: number,
