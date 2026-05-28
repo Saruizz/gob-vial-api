@@ -1,0 +1,28 @@
+{
+  "apps": [
+    {
+      "name": "gobervial-api",
+      "script": "dist/server.js",
+      "cwd": "/var/www/gobervial/api",
+      "instances": 1,
+      "exec_mode": "fork",
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": 3000,
+        "HOST": "0.0.0.0"
+      },
+      "autorestart": true,
+      "watch": false,
+      "max_memory_restart": "512M",
+      "log_date_format": "YYYY-MM-DD HH:mm:ss Z",
+      "error_file": "/var/www/gobervial/api/logs/error.log",
+      "out_file": "/var/www/gobervial/api/logs/output.log",
+      "merge_logs": true,
+      "log_rotate": {
+        "max_size": "10M",
+        "retain": 7,
+        "compress": true
+      }
+    }
+  ]
+}
