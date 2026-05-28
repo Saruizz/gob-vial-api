@@ -1,8 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import swaggerUi from 'swagger-ui-express';
 import env from './config/env';
 import logger from './config/logger';
+import swaggerSpec from './config/swagger';
 import { testConnection } from './config/database';
 import routes from './routes';
 import { errorHandler } from './middlewares/errorHandler';
@@ -38,6 +40,11 @@ app.get('/health', async (_req, res) => {
   });
 });
 
+app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'GoberVial API Docs',
+}));
+
 app.use(env.API_PREFIX, routes);
 
 app.use(errorHandler);
@@ -51,6 +58,7 @@ app.listen(env.PORT, env.HOST, () => {
     apiPrefix: env.API_PREFIX,
   });
   console.log(`GoberVial API running on http://${env.HOST}:${env.PORT}${env.API_PREFIX}`);
+  console.log(`Swagger Docs available at http://localhost:${env.PORT}/api/v1/docs`);
 });
 
 export default app;

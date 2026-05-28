@@ -1,0 +1,28 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: gobervial-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: gobervial_root_2026
+      MYSQL_DATABASE: gobervial
+      MYSQL_USER: gobervial_user
+      MYSQL_PASSWORD: G0b3rV14l_S3cur3_P4ss_2026#
+    ports:
+      - '3306:3306'
+    volumes:
+      - gobervial_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./src/database/seeds/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-pgobervial_root_2026']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  gobervial_data:

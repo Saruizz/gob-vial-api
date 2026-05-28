@@ -6,6 +6,35 @@ import { authenticate } from '../middlewares/auth';
 
 const router = Router();
 
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Registrar un nuevo ciudadano
+ *     description: Crea una cuenta de ciudadano con biometria pendiente. Retorna tokens JWT.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RegisterInput'
+ *     responses:
+ *       201:
+ *         description: Registro exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/TokenResponse'
+ *       400:
+ *         description: Datos de entrada invalidos
+ *       409:
+ *         description: Email o documento ya registrado
+ */
 const registroValidation = [
   body('nombres')
     .trim()
@@ -50,6 +79,33 @@ const registroValidation = [
     .withMessage('Password must contain at least one number'),
 ];
 
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Iniciar sesion
+ *     description: Autentica al usuario y retorna tokens JWT de acceso y refresco.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginInput'
+ *     responses:
+ *       200:
+ *         description: Login exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/TokenResponse'
+ *       401:
+ *         description: Credenciales invalidas o cuenta deshabilitada
+ */
 const loginValidation = [
   body('email')
     .trim()
@@ -65,8 +121,80 @@ const loginValidation = [
 
 router.post('/register', registroValidation, validate, authController.register);
 router.post('/login', loginValidation, validate, authController.login);
+
+/**
+ * @swagger
+ * /auth/profile:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Obtener perfil del usuario autenticado
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil obtenido exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/UserResponse'
+ *       401:
+ *         description: Token invalido o expirado
+ */
 router.get('/profile', authenticate, authController.getProfile);
+
+/**
+ * @swagger
+ * /auth/biometria/verify:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Verificar biometria facial (mock)
+ *     description: Simula una verificacion biometrica. Tarda entre 1.5 y 3.5 segundos. El 85% de las veces aprueba.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Resultado de la verificacion biometrica
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/BiometriaResponse'
+ *       400:
+ *         description: Biometria ya verificada o rechazada
+ *       401:
+ *         description: Token invalido o expirado
+ */
 router.post('/biometria/verify', authenticate, authController.verifyBiometria);
+
+/**
+ * @swagger
+ * /auth/biometria/status:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Consultar estado de verificacion biometrica
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Estado actual de la biometria
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/BiometriaResponse'
+ *       401:
+ *         description: Token invalido o expirado
+ */
 router.get('/biometria/status', authenticate, authController.getBiometriaStatus);
 
 export default router;
